@@ -1,0 +1,19 @@
+<ul>
+<li data-bind-class="servicestatus">
+<h1 class="title" data-bind="title"></h1>
+<div data-showif="servicestatus | equals 'error'"> <!-- error -->
+  <h4>Error querying Nagios.</h4>
+</div> <!-- /no error -->
+
+<div data-hideif="servicestatus | equals 'error'"> <!-- no error -->
+  <i data-showif="servicestatus | equals 'yellow'" class='fa fa-exclamation-triangle'></i>
+  <i data-showif="servicestatus | equals 'red'" class='fa fa-exclamation-circle'></i>
+  <i data-showif="servicestatus | equals 'grey'" class='fa fa-exclamation-question'></i>
+  <i data-showif="servicestatus | equals 'green'" class='fa fa-check'></i>
+  <h1 class='servicesnumbers'>
+    <span data-bind="service_ok"></span>/<span data-bind="service_unknown"></span>/<span data-bind="service_warning"></span>/<span data-bind="service_critical"></span>
+  </h1>
+  <p class="updated-at" data-bind="updatedAtMessage"></p>
+</div> <!-- /no error -->
+</li>
+</ul>
