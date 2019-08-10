@@ -22,8 +22,8 @@ Like every other Smashing widget, copy the job filee `nagiosxi.rb` in the `jobs`
 This widget uses `open-uri` and `json`. make sure to add them in your dashboard Gemfile
 
 ```Gemfile
-require 'open-uri'
-require 'json'
+gem 'open-uri'
+gem 'json'
 ```
 
 and to run the update command to download and install them.
