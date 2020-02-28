@@ -36,7 +36,7 @@ configure `nagiosxi.rb` job file for your environment:
 
 ```ruby
 apiKey = 'xxxxxxx' # The API Key generated in your Nagios XI
-nagiosIP = 'xxx.xxx.xxx.xxx' # IP Address or Hostname of your Nagios XI server
+nagiosHOST = 'your.nagiosxihost.name' # IP Address or Hostname of your Nagios XI server
 ```
 
 add the tiles in your dashboard .erb file
