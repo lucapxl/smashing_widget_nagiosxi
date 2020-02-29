@@ -6,14 +6,14 @@ apiKey = 'your nagios api key here'
 nagiosHOST = 'your nagios XI host hostname here'
  
 hostsURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/hoststatus?apikey=' + apiKey
-servicesURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/servicestatus?apikey=' + apiKey
+servicesURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/servicestatus?apikey=' + apiKey + '&current_state=ne:0'
 
 #nagios hosts codes: 0=ok, 1=down, 2=unreachable
 #nagios services codes: 0=ok, 1=warning, 2=critical, 3=unknown
 #smashing nagios status codes: 4=critical, 3=warning, 2=unknown, 1=scheduled, 0=acknowledged
 
 def getServiceLevel(state,scheduled,acknowledged)
-    returnStatus = 2
+    returnStatus = 4
     case state
     when 1 #warning
         returnStatus = 3
