@@ -2,16 +2,18 @@ require 'open-uri'
 require 'json'
 require 'nokogiri'
 
+########################################################################################################
+# make sure you edit these variables to fit your environment
 apiKey = 'your nagios api key here'
 nagiosHOST = 'your nagios XI host hostname here'
- 
+########################################################################################################
+
 hostsURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/hoststatus?apikey=' + apiKey
 servicesURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/servicestatus?apikey=' + apiKey + '&current_state=ne:0'
 
 #nagios hosts codes: 0=ok, 1=down, 2=unreachable
 #nagios services codes: 0=ok, 1=warning, 2=critical, 3=unknown
 #smashing nagios status codes: 4=critical, 3=warning, 2=unknown, 1=scheduled, 0=acknowledged
-
 def getServiceLevel(state,scheduled,acknowledged)
     returnStatus = 4
     case state
@@ -100,15 +102,16 @@ SCHEDULER.every '20', :first_in => 0 do
         end
 
         servicesStatus['servicestatus'].each do |child|
+            if servicesStatus['recordcount'] == "1"
+                child = servicesStatus['servicestatus']
+            end
             service = {}
-            service['ack'] = child['problem_acknowledged'] == "0" ? false : true
-            service['scheduled'] = child['scheduled_downtime_depth'] == "0" ? false : true
+            service['ack'] = child['problem_acknowledged'].to_s == "0" ? false : true
+            service['scheduled'] = child['scheduled_downtime_depth'].to_s == "0" ? false : true
             service['state'] = child['current_state'].to_i
             service['name'] = child['display_name'].to_s
-            service['state'] == 3 ?  service['text'] = 'Check Pending' : service['text'] = child['status_text'].to_s
+            service['state'] == 3 ?  service['text'] = 'Unknown' : service['text'] = child['status_text'].to_s
                 
-            
-
             host_name = child['host_name']
             host_alias = child['host_alias']
 
@@ -152,6 +155,7 @@ SCHEDULER.every '20', :first_in => 0 do
                     end
                 end
             end
+            break if servicesStatus['recordcount'] == "1"
         end
 
         hosts.each do |key, host|
@@ -179,19 +183,18 @@ SCHEDULER.every '20', :first_in => 0 do
 
         send_event('messages', { nagios_message: nagios_message[4] + nagios_message[3] + nagios_message[2] + nagios_message[1] + nagios_message[0]}) 
 
-
         hoststatus = nagios_hosts_highest_status == 3 ? "red" : (nagios_hosts_highest_status == 2 ? "yellow" : (nagios_hosts_highest_status > 0 ? "grey" : "green"))
         servicestatus = nagios_services_highest_status == 4 ? "red" : (nagios_services_highest_status == 3 ? "yellow" : (nagios_services_highest_status > 0 ? "grey" : "green"))
-
-        send_event('nagiosxihosts', { host_up: nagios_hosts_count['up'], host_down: nagios_hosts_count['down'], host_unreachable: nagios_hosts_count['unreachable'], hoststatus: hoststatus })
-        send_event('nagiosxiservices', { service_ok: nagios_services_count['ok'], service_warning: nagios_services_count['warning'], service_critical: nagios_services_count['critical'], service_unknown: nagios_services_count['unknown'],servicestatus: servicestatus })
         
+        nagiosstatus = servicestatus
+        if nagios_hosts_highest_status >= nagios_services_highest_status
+            nagiosstatus = hoststatus
+        end
 
+        send_event('nagiosxi', { nagiosstatus: nagiosstatus})
 
     else #no data from nagios server
-        send_event('nagiosxihosts', { host_up: 0, host_down: 0, host_unreachable:0, hoststatus: "error" })
-        sleep(1)
-        send_event('nagiosxiservices', {    service_ok: 0, service_warning: 0, service_critical: 0, service_unknown: 0, service_pending: 0,servicestatus: "error" })
+        send_event('nagiosxi', { nagiosstatus: nagiosstatus})
         send_event('messages', { nagios_message: nagios_message}) 
 
     end

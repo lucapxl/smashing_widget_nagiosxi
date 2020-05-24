@@ -16,11 +16,7 @@ The numbers in the tiles represent the following:
 ![services3](https://raw.githubusercontent.com/lucapxl/smashing_widget_nagiosxi/master/images/services-ok.png)
 
 ## Installation and Configuration
-
-Like every other Smashing widget, copy the job filee `nagiosxi.rb` in the `jobs` directory of your dashboard as well as the `nagiosxihost` and `nagiosxiservices` subfolders in the widgets folder.
-
 This widget uses `open-uri` and `json`. make sure to add them in your dashboard Gemfile
-
 ```Gemfile
 gem 'open-uri'
 gem 'json'
@@ -30,6 +26,11 @@ and to run the update command to download and install them.
 
 ```bash
 $ bundle update
+```
+
+Create a ```nagiosxi``` folder in your ```/widgets``` directory and clone this repository inside it. make a symolic link of the file ```jobs/nagiosxi.rb``` in the ```/jobs/``` directory of your dashboard. For example, if your smashing installation directory is in ```/opt/dashboard/``` you would run this:
+```Shell
+$ ln -s /opt/dashboard/widgets/nagiosxi/jobs/nagiosxi.rb /opt/dashboard/jobs/nagiosxi.rb
 ```
 
 configure `nagiosxi.rb` job file for your environment:
@@ -42,11 +43,8 @@ nagiosHOST = 'your.nagiosxihost.name' # IP Address or Hostname of your Nagios XI
 add the tiles in your dashboard .erb file
 
 ```html
-    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
-      <div data-id="nagiosxihosts" data-view="Nagiosxihosts" data-title="Hosts"></div>
-    </li>
-    <li data-row="1" data-col="1" data-sizex="1" data-sizey="1">
-      <div data-id="nagiosxiservices" data-view="Nagiosxiservices" data-title="Services"></div>
+    <li data-row="2" data-col="2" data-sizex="1" data-sizey="1">
+      <div data-id="nagiosxi" data-view="Nagiosxi" data-title="Infrastructure"></div>
     </li>
 ```
 

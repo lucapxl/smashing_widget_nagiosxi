@@ -1,0 +1,18 @@
+<ul>
+    <li data-bind-class="nagiosstatus">
+    <h1 class="title" data-bind="title"></h1>
+    <div data-showif="nagiosstatus | equals 'error'"> <!-- error -->
+      <h4>Error querying Nagios.</h4>
+    </div> <!-- /no error -->
+    
+    <div data-hideif="nagiosstatus | equals 'error'"> <!-- no error --> 
+      <i data-showif="nagiosstatus | equals 'yellow'" class='fa fa-exclamation-triangle'></i>
+      <i data-showif="nagiosstatus | equals 'red'" class='fa fa-exclamation-circle'></i>
+      <i data-showif="nagiosstatus | equals 'grey'" class='fa fa-question'></i>
+      <i data-showif="nagiosstatus | equals 'green'" class='fa fa-check'></i>
+      <p class="updated-at" data-bind="updatedAtMessage"></p>
+    </div> <!-- /no error -->
+    
+    </li>
+    </ul>
+    
