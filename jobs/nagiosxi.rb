@@ -1,6 +1,5 @@
 require 'open-uri'
 require 'json'
-require 'nokogiri'
 
 ########################################################################################################
 # make sure you edit these variables to fit your environment
