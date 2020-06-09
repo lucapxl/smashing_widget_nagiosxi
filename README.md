@@ -16,9 +16,9 @@ The numbers in the tiles represent the following:
 ![services3](https://raw.githubusercontent.com/lucapxl/smashing_widget_nagiosxi/master/images/services-ok.png)
 
 ## Installation and Configuration
-This widget uses `open-uri` and `json`. make sure to add them in your dashboard Gemfile
+This widget uses `rest-client` and `json`. make sure to add them in your dashboard Gemfile
 ```Gemfile
-gem 'open-uri'
+gem 'rest-client'
 gem 'json'
 ```
 

@@ -1,4 +1,4 @@
-require 'open-uri'
+require 'rest-client'
 require 'json'
 
 ########################################################################################################
@@ -7,8 +7,8 @@ apiKey = 'your nagios api key here'
 nagiosHOST = 'your nagios XI host hostname here'
 ########################################################################################################
 
-hostsURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/hoststatus?apikey=' + apiKey
-servicesURL = 'http://' + nagiosHOST + '/nagiosxi/api/v1/objects/servicestatus?apikey=' + apiKey + '&current_state=ne:0'
+hostsURL = 'https://' + nagiosHOST + '/nagiosxi/api/v1/objects/hoststatus?apikey=' + apiKey
+servicesURL = 'https://' + nagiosHOST + '/nagiosxi/api/v1/objects/servicestatus?apikey=' + apiKey + '&current_state=ne:0'
 
 #nagios hosts codes: 0=ok, 1=down, 2=unreachable
 #nagios services codes: 0=ok, 1=warning, 2=critical, 3=unknown
@@ -54,13 +54,33 @@ def getLevelIcon(status)
 end
 
 SCHEDULER.every '20', :first_in => 0 do
-    resp = Net::HTTP.get_response(URI.parse(hostsURL))
-    jsonData = resp.body
-    hostsStatus = JSON.parse(jsonData)
+    hostsStatus = ""
+    hostsResponse = RestClient::Request.new({
+        method: :get,
+        url: hostsURL,
+        verify_ssl: false
+    }).execute do |hostsResponse, request, result|
+        case hostsResponse.code
+        when 200
+            hostsStatus = JSON.parse(hostsResponse.to_str)
+        else
+            fail "error: #{hostsResponse.to_str}"
+        end
+    end
 
-    resp2 = Net::HTTP.get_response(URI.parse(servicesURL))
-    jsonData2 = resp2.body
-    servicesStatus = JSON.parse(jsonData2)
+    servicesStatus = ""
+    servicesResponse = RestClient::Request.new({
+        method: :get,
+        url: servicesURL,
+        verify_ssl: false
+    }).execute do |servicesResponse, request, result|
+        case servicesResponse.code
+        when 200
+            servicesStatus = JSON.parse(servicesResponse.to_str)
+        else
+            fail "error: #{servicesResponse.to_str}"
+        end
+    end 
 
     nagios_hosts_count = {"up" => 0, "down" => 0, "unreachable" => 0, "scheduled" => 0, "ack" => 0}
     nagios_services_count = {"ok" => 0,"warning" => 0, "critical" => 0, "unknown" => 0, "pending" => 0, "ack" => 0, "scheduled" => 0}
@@ -76,17 +96,17 @@ SCHEDULER.every '20', :first_in => 0 do
 
         hostsStatus['hoststatus'].each do |child|
             host_current_state = child['current_state'].to_i
-            host_name = child['name']
+            host_name = child['host_name']
 
             case host_current_state
             when 0 #up
                 nagios_hosts_count["up"] += 1
             else
                 hosts[host_name] == nil ? hosts[host_name] = {} : nil
-                hosts[host_name]['ack'] = child['problem_acknowledged'] == "0" ? false : true
+                hosts[host_name]['ack'] = child['problem_has_been_acknowledged'] == "0" ? false : true
                 hosts[host_name]['scheduled'] = child['scheduled_downtime_depth'] == "0" ? false : true
                 hosts[host_name]['state'] = 1
-                hosts[host_name]['alias'] = child['alias']
+                hosts[host_name]['alias'] = child['host_alias']
                 hosts[host_name]['services'] = []
 
                 if hosts[host_name]['scheduled']
@@ -105,11 +125,11 @@ SCHEDULER.every '20', :first_in => 0 do
                 child = servicesStatus['servicestatus']
             end
             service = {}
-            service['ack'] = child['problem_acknowledged'].to_s == "0" ? false : true
+            service['ack'] = child['problem_has_been_acknowledged'].to_s == "0" ? false : true
             service['scheduled'] = child['scheduled_downtime_depth'].to_s == "0" ? false : true
             service['state'] = child['current_state'].to_i
             service['name'] = child['display_name'].to_s
-            service['state'] == 3 ?  service['text'] = 'Unknown' : service['text'] = child['status_text'].to_s
+            service['state'] == 3 ?  service['text'] = 'Unknown' : service['text'] = child['output'].to_s
                 
             host_name = child['host_name']
             host_alias = child['host_alias']
